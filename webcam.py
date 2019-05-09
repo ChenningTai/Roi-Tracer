@@ -37,15 +37,9 @@ while True:
         minSize=(30,30),
         flags=cv2.CASCADE_SCALE_IMAGE###修正過
     )
-    eyes = eyeCascade.detectMultiScale(
-        gray,
-        scaleFactor=1.1,
-        minNeighbors=5,
-        minSize=(30,30),
-        flags=cv2.CASCADE_SCALE_IMAGE
-    )
-    img = np.zeros((height,width,1), np.uint8)
 
+
+    img = np.zeros((height,width,1), np.uint8)
     # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
 
@@ -53,7 +47,15 @@ while True:
         # img = cv2.rectangle(img, (x, y), (x+w, y+h), 255, -1)
         cv2.imshow('rec', img)
         # print(type(img))
-        frame = cv2.bitwise_and(frame, frame, mask = img)#位元運算
+    gray = cv2.bitwise_and(gray, gray, mask = img)#位元運算
+    cv2.imshow('gray', gray)
+    eyes = eyeCascade.detectMultiScale(
+        gray,
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(30,30),
+        flags=cv2.CASCADE_SCALE_IMAGE
+    )
     for (x, y, w, h) in eyes:
         cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
     # Display the resulting frame
