@@ -38,17 +38,16 @@ while True:
         flags=cv2.CASCADE_SCALE_IMAGE###修正過
     )
 
-
     img = np.zeros((height,width,1), np.uint8)
     # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
-
-        img = cv2.rectangle(img, (x-10, y-10), (x+w+15, y+h+15), 255, -1)#框框(哪張圖,左上角位置,左下角位置,顏色,寬度)
-        # img = cv2.rectangle(img, (x, y), (x+w, y+h), 255, -1)
-        cv2.imshow('rec', img)
-        # print(type(img))
+        h = int(0.7*h)#發現他只吃整數
+        img = cv2.rectangle(img, (x-10, y-10), (x+w+10, y+h), 255, -1)#框框(哪張圖,左上角位置,左下角位置,顏色,寬度)
+        # img = cv2.rectangle(img, (x, y), (x+w, y+h), 255, -1)#原本的
+        # cv2.imshow('rec', img)
     gray = cv2.bitwise_and(gray, gray, mask = img)#位元運算
     cv2.imshow('gray', gray)
+    #eyes detect
     eyes = eyeCascade.detectMultiScale(
         gray,
         scaleFactor=1.1,
