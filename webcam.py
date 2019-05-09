@@ -45,7 +45,7 @@ while True:
         img = cv2.rectangle(img, (x-10, y-10), (x+w+10, y+h), 255, -1)#框框(哪張圖,左上角位置,左下角位置,顏色,寬度)
         # img = cv2.rectangle(img, (x, y), (x+w, y+h), 255, -1)#原本的
         # cv2.imshow('rec', img)
-    gray = cv2.bitwise_and(gray, gray, mask = img)#位元運算
+    if faces != (): gray = cv2.bitwise_and(gray, gray, mask = img)#位元運算
     cv2.imshow('gray', gray)
     #eyes detect
     eyes = eyeCascade.detectMultiScale(
