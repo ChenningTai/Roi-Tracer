@@ -14,10 +14,9 @@ def roiDetector(eye, frame):
     gray_roi = cv2.GaussianBlur(gray_roi, (7 ,7), 0)
     # gray_roi = cv2.equalizeHist(gray_roi)
     _, threshold = cv2.threshold(gray_roi, 5, 255, cv2.THRESH_BINARY_INV)#若無equalize:40
-    kernal = np.ones((rows, cols),np.uint8)
+    kernal = np.ones((3, 3),np.uint8)
     cv2.imshow('before', threshold)
-    ersThre = cv2.erode(threshold, kernal)
-    # threshold = cv2.dilate(ersThre, kernal)
+    threshold = cv2.dilate(threshold, kernal)
     contours, _ = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # for cnt in contours: cv2.drawContours(roi, [cnt], -1, (0, 0, 255), 3) #draw contours
     ###-----------------from net
@@ -108,7 +107,7 @@ while True:
         # i += 1
         cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)#原式
         # mask_roi = cv2.bitwise_and(gray, gray, mask = img)
-    # cv2.imshow('maskroi', mask_roi)
+        # cv2.imshow('maskroi', mask_roi)
         # roi[i] = frame[x:(x+w), y:(y+h)]
         # roiDetector(mask_roi)
         frame = roiDetector(mask_roi, frame)
