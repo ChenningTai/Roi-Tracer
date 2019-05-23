@@ -20,10 +20,10 @@ def roiDetector(gray_Eye, frame, x, y):
     # cv2.imshow('roi', roi)
     # gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
     roi = cv2.equalizeHist(roi)
-    # roi = cv2.GaussianBlur(roi, (7 ,7), 0)
+    roi = cv2.GaussianBlur(roi, (7 ,7), 0)
     # cv2.imshow('complete', roi)
-    # roi = cv2.equalizeHist(roi)
-    _, threshold = cv2.threshold(roi, 10, 255, cv2.THRESH_BINARY_INV)#若無equalize:40
+    roi = cv2.equalizeHist(roi)
+    _, threshold = cv2.threshold(roi, 40, 255, cv2.THRESH_BINARY_INV)#若無equalize:40
     kernal = np.ones((3, 3),np.uint8)
     # cv2.imshow('threshold_before dilate', threshold)
     threshold = cv2.dilate(threshold, kernal)
@@ -36,7 +36,7 @@ def roiDetector(gray_Eye, frame, x, y):
         (xx, yy, ww, hh) = cv2.boundingRect(cnt)
        #cv2.drawContours(roi, [cnt], -1, (0, 0, 255), 3)
         xx = xx+x
-        yy = yy+y
+        yy = yy+y-5
         cv2.rectangle(frame, (xx, yy), (xx + ww, yy + hh), (0, 0, 255), 2)
         # cv2.line(frame, (xx + int(ww/2), 0), (xx + int(ww/2), rows), (0, 255, 0), 2)
         # cv2.line(frame, (0, yy + int(hh/2)), (cols, yy + int(hh/2)), (0, 255, 0), 2)
@@ -73,7 +73,7 @@ def get_eye(eye_points, facial_landmarks,frame):
 #-------------------
     y = center_top[1]
     x = left_point[0]
-    eye = frame[center_top[1]:center_bottom[1],left_point[0]:right_point[0]]
+    eye = frame[(y-5):center_bottom[1],x:right_point[0]]
     gray_eye = cv2.cvtColor(eye, cv2.COLOR_BGR2GRAY)
     frame, analysis = roiDetector(gray_eye, frame, x, y)
     # cv2.imshow("roi", gray_eye)
