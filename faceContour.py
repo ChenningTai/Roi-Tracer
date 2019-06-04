@@ -9,11 +9,13 @@ from math import hypot
 # close erode open  #現在可考慮close
 # cv2.morphologyEx(pupilFrame, )
 #在function裡面的是區域變數，無法直接存取---已解決
-
+#把二質化後的各處理成果顯示
+#十張相片取平均位置
+#眼睛高度優化
 
 def roiDetector(gray_Eye, frame, x, y):
     # ret, gray_Eye = video_capture.read()#boolean, gray_Eye
-    # h, w = gray_Eye.shape
+    h, _ = gray_Eye.shape #為了側上下視線
     roi = gray_Eye.copy()
     # rows, cols = roi.shape
     # cv2.imshow('v', roi)
@@ -25,8 +27,9 @@ def roiDetector(gray_Eye, frame, x, y):
     # cv2.imshow('complete', roi)
     roi = cv2.equalizeHist(roi1)
     _, threshold = cv2.threshold(roi, 40, 255, cv2.THRESH_BINARY_INV)#若無equalize:40
-    kernal = np.ones((3, 3),np.uint8)
+    kernal = np.ones((2, 2),np.uint8)
     # cv2.imshow('threshold_before dilate', threshold)
+    # threshold = cv2.morphologyEx(threshold, cv2.MORPH_CLOSE, kernal)
     threshold = cv2.dilate(threshold, kernal)
     contours, _ = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # print(contours)
@@ -36,7 +39,10 @@ def roiDetector(gray_Eye, frame, x, y):
     for cnt in contours:
         (xx, yy, ww, hh) = cv2.boundingRect(cnt)
        #cv2.drawContours(roi, [cnt], -1, (0, 0, 255), 3)
-        centerPosi = xx + ww/2
+        centerPosi_x = xx + ww/2
+        # centerPosi_y = yy + hh/2
+        centerPosi_y = h #可在前面賦予h值處就直接推到centerPosi_y
+        print(h)
         xx = xx+x
         yy = yy+y-5
         cv2.rectangle(frame, (xx, yy), (xx + ww, yy + hh), (0, 0, 255), 2)
@@ -65,7 +71,7 @@ def roiDetector(gray_Eye, frame, x, y):
 #         # del distanceX[MAindex]
 # #------------------------------------
 
-    return frame, np.hstack([roi0, roi1, roi, threshold]), centerPosi
+    return frame, np.hstack([roi0, roi1, roi, threshold]), centerPosi_x, centerPosi_y
 
 def get_eye(eye_points, facial_landmarks,frame):
     left_point = (facial_landmarks.part(eye_points[0]).x, facial_landmarks.part(eye_points[0]).y)
@@ -77,14 +83,15 @@ def get_eye(eye_points, facial_landmarks,frame):
     x = left_point[0]
     eye = frame[(y-5):center_bottom[1],x:right_point[0]]
     gray_eye = cv2.cvtColor(eye, cv2.COLOR_BGR2GRAY)
-    frame, analysis, centerPosi = roiDetector(gray_eye, frame, x, y)
+    frame, analysis, centerPosi_x, centerPosi_y = roiDetector(gray_eye, frame, x, y)
 #計算瞳孔位置比例
-    widRatio = centerPosi / (right_point[0]-x)
-    # cv2.imshow("roi", gray_eye)
+    widRatio = centerPosi_x / (right_point[0]-x)
+    # heiRatio = centerPosi_y / (center_bottom[1]-y+5)#原本判定視線高度方法
+    heiRatio = centerPosi_y#將來要直接賦值
 #-------------------
     hor_line = cv2.line(frame, left_point, right_point, (0, 255, 0), 2)
     ver_line = cv2.line(frame, center_top, center_bottom, (0, 255, 0), 2)
-    return np.hstack([gray_eye, analysis]), widRatio
+    return np.hstack([gray_eye, analysis]), [widRatio, heiRatio]
 
 
 # cap = cv2.VideoCapture('news.mp4')
@@ -96,16 +103,21 @@ predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 def midpoint(p1 ,p2):
     return int((p1.x + p2.x)/2), int((p1.y + p2.y)/2)
 
-def Pointer(ratio):
+def Pointer(ratio):#傳回座標[[右眼寬,右眼高], [左眼寬,左眼高]]
 #先右後左
     Left = [0.75,0.7]
-    Center = [0.6, 0.5]
+    WidCenter = [0.6, 0.5]
     Right = [0.43, 0.3]
-    x = [-1,-1]
-    for i in range(2):
-        x[i] = (ratio[i]-Left[i])*2000/(Right[i]-Left[i])
-    return int((x[0]+x[1])/2)
+    Up = [14,14]
+    Down = [9,9]
 
+    x = [-1,-1]
+    y = [-1,-1]
+    for i in range(2):
+        x[i] = (ratio[i][0]-Left[i])/(Right[i]-Left[i])
+        y[i] = (ratio[i][1]-Up[i])/(Down[i]-Up[i])
+    return int((x[0]+x[1])*1000), int((y[0]+y[1])*500)
+#將原公式*2000/2 改寫成*1000，*500抑是
 
 
 
@@ -115,27 +127,26 @@ while True:
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     faces = detector(gray)
-    blk = np.zeros((500,2000), np.uint8)
-    # blk1 = np.zeros((500,1000), np.uint8)
+    blk = np.zeros((1000,2000), np.uint8)
     for face in faces:
         #x, y = face.left(), face.top()
         #x1, y1 = face.right(), face.bottom()
         #cv2.rectangle(frame, (x, y), (x1, y1), (0, 255, 0), 2)
         landmarks = predictor(gray, face)
         centerRatio = [None, None]
-        analysisR, centerRatio[0] = get_eye([36, 37, 38, 39, 40, 41], landmarks, frame)
+        analysisR, centerRatio[0] = get_eye([36, 37, 38, 39, 40, 41], landmarks, frame)#這邊讀取傳回直應該將左右分法改成xy分法
         analysisL, centerRatio[1] = get_eye([42, 43, 44, 45, 46, 47], landmarks, frame)
-        # print(centerRatio)
-        sightPoint = Pointer(centerRatio)
-        print(sightPoint)
+        # print(centerRatio[0][1])
+        sightPoint_X, sightPoint_Y = Pointer(centerRatio)
+#可考慮加入十禎取平均
 #analysis
         h1, w1 = analysisR.shape
         h2, w2 = analysisL.shape
-        cv2.circle(blk, (0+sightPoint,300), 10, (255,0,0), -1) #, lineType=None, shift=None)
         # cv2.circle(blk, (600,300), 10, (255,0,0), 2)
         # cv2.circle(blk, (100,300), 10, (255,0,0), 2)
         blk[0:h1, 0:w1] = analysisR
         blk[50:(h2+50), 0:w2] = analysisL
+        cv2.circle(blk, (sightPoint_X,sightPoint_Y), 10, (255,0,0), -1) #, lineType=None, shift=None)
         cv2.imshow('eye', blk)
 #-------------------
         # y = center_top[1]
