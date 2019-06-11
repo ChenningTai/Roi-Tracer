@@ -120,9 +120,9 @@ def Pointer(ratio):#傳回座標[[右眼寬,右眼高], [左眼寬,左眼高]]
     return int(sum(x)*1000), int(sum(y)*500)#兩眼資料取平均(這樣是最有效的嗎??)
 #將原公式*2000/2 改寫成*1000，*500抑是
 def Correction():
-    posiList = [[0.5]*32,[0.5]*32,[0.5]*32,[0.5]*32]
+    posiList = [[0.5]*64,[0.5]*64,[0.5]*64,[0.5]*64]#若使用[[0.5]*32]*4則會錯將外層[]中四個元素指向同一個參考位置
     # i = 1
-    mean = [None]*4
+    mean = []
     for i in range(64):
         _, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -136,13 +136,13 @@ def Correction():
             # centerRatioY = [None, None]
             analysisR, centerRatio[0] = get_eye([36, 37, 38, 39, 40, 41], landmarks, frame)#這邊讀取傳回直應該將左右分法改成xy分法
             analysisL, centerRatio[1] = get_eye([42, 43, 44, 45, 46, 47], landmarks, frame)
-            j = i%32##改進:找出最接近的32個值
             for n in range(2):
                 for m in range(2):
                     k = n*2+m
-                    posiList[k][j] = centerRatio[n][m]#rx
-                    mean[k] = sum(posiList[k])/32
-            # i += 1
+                    posiList[k][i] = centerRatio[n][m]#rx
+    for each in posiList:
+        each.sort()
+        mean.append(sum(each[17:48])/32)
     return mean
 
 
