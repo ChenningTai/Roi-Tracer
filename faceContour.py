@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import dlib
 from math import hypot
-
+import time
 #https://tpu.thinkpower.com.tw/tpu/articleDetails/950
 #pip install CMake
 #推薦:阿洲的城市教學
@@ -12,7 +12,9 @@ from math import hypot
 #把二質化後的各處理成果顯示
 #十張相片取平均位置
 #眼睛高度優化
-    #考慮用雙重:瞳孔位置、眼睛高度判斷   實驗:用拍攝的四張相片分析
+    #考慮用雙重:瞳孔位置、眼睛高度判斷   實驗:用拍攝的四張相片分析#目前看起來還可行，先暫放
+#可考慮用二維線性映射  #重要性在於螢幕並非完全水平時
+
 
 
 def roiDetector(gray_Eye, frame, x, y):
@@ -95,35 +97,69 @@ def get_eye(eye_points, facial_landmarks,frame):
     return np.hstack([gray_eye, analysis]), [widRatio, heiRatio]
 
 
-# cap = cv2.VideoCapture('news.mp4')
-cap = cv2.VideoCapture(1)
-
-detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
-
 def midpoint(p1 ,p2):
     return int((p1.x + p2.x)/2), int((p1.y + p2.y)/2)
 
 def Pointer(ratio):#傳回座標[[右眼寬,右眼高], [左眼寬,左眼高]]
 #先右後左
-    Left = [0.75,0.7]
-    WidCenter = [0.6, 0.5]
-    Right = [0.43, 0.3]
-    Up = [14,14]
-    Down = [9,9]
+    # Left = [0.75,0.7]
+    # WidCenter = [0.6, 0.5]
+    # Right = [0.43, 0.3]
+    # Up = [14,14]
+    # Down = [9,9]
+    Left = [upLeft[0],upLeft[2]]
+    Right = [downRight[0], downRight[2]]
+    Up = [upLeft[1], upLeft[3]]
+    Down = [downRight[1], downRight[3]]
 
     x = [-1,-1]
     y = [-1,-1]
     for i in range(2):
         x[i] = (ratio[i][0]-Left[i])/(Right[i]-Left[i])
         y[i] = (ratio[i][1]-Up[i])/(Down[i]-Up[i])
-    return int((x[0]+x[1])*1000), int((y[0]+y[1])*500)#兩眼資料取平均(這樣是最有效的嗎??)
+    return int(sum(x)*1000), int(sum(y)*500)#兩眼資料取平均(這樣是最有效的嗎??)
 #將原公式*2000/2 改寫成*1000，*500抑是
+def Correction():
+    posiList = [[0.5]*32,[0.5]*32,[0.5]*32,[0.5]*32]
+    # i = 1
+    mean = [None]*4
+    for i in range(64):
+        _, frame = cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = detector(gray)
+        for face in faces:
+            #x, y = face.left(), face.top()
+            #x1, y1 = face.right(), face.bottom()
+            #cv2.rectangle(frame, (x, y), (x1, y1), (0, 255, 0), 2)
+            landmarks = predictor(gray, face)
+            centerRatio = [None, None]
+            # centerRatioY = [None, None]
+            analysisR, centerRatio[0] = get_eye([36, 37, 38, 39, 40, 41], landmarks, frame)#這邊讀取傳回直應該將左右分法改成xy分法
+            analysisL, centerRatio[1] = get_eye([42, 43, 44, 45, 46, 47], landmarks, frame)
+            j = i%32##改進:找出最接近的32個值
+            for n in range(2):
+                for m in range(2):
+                    k = n*2+m
+                    posiList[k][j] = centerRatio[n][m]#rx
+                    mean[k] = sum(posiList[k])/32
+            # i += 1
+    return mean
 
 
+#Main():
+# cap = cv2.VideoCapture('news.mp4')
+cap = cv2.VideoCapture(1)
 
-
-#Main:
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+#Correction
+print('Start 1...')
+time.sleep(1)
+upLeft = Correction()
+print('Start 2...')
+time.sleep(1)
+downRight = Correction()
+#prepare
 ini = 0.5
 eightFotoX = [ini]*8#for Purify()
 eightFotoY = [ini]*8#for Purify()
@@ -152,7 +188,7 @@ while True:
         eightFotoY[j] = sightPoint_Y #兩眼資料取平均(這樣是最有效的嗎??)
         eightFotoY_u = int(sum(eightFotoY)/8)
         i += 1
-#可考慮加入十禎取平均
+
 #analysis
         h1, w1 = analysisR.shape
         h2, w2 = analysisL.shape
@@ -161,7 +197,7 @@ while True:
         blk[0:h1, 0:w1] = analysisR
         blk[50:(h2+50), 0:w2] = analysisL
         cv2.circle(blk, (eightFotoX_u,eightFotoY_u), 10, (255,0,0), 2) #, lineType=None, shift=None)
-        cv2.circle(blk, (sightPoint_X,sightPoint_Y), 10, (255,0,0), -1) #, lineType=None, shift=None)
+        # cv2.circle(blk, (sightPoint_X,sightPoint_Y), 10, (255,0,0), -1) #, lineType=None, shift=None)
         cv2.imshow('eye', blk)
 #-------------------
         # y = center_top[1]
