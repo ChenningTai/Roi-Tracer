@@ -1,4 +1,4 @@
-# eyeDetector
+# Roi-Tracer
 ## 操作步驟:
 1. 執行roiTrace_1.py
 ```linux
