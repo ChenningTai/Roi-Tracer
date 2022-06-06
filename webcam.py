@@ -3,7 +3,7 @@ import sys
 import numpy as np
 
 def roiDetector(eye, frame):
-    # ret, eye = video_capture.read()#boolean, eye
+    # ret, eye = video_capture.read() #boolean, eye
     # h, w = eye.shape
     roi = eye.copy()
     rows, cols = roi.shape
@@ -13,7 +13,7 @@ def roiDetector(eye, frame):
     gray_roi = cv2.equalizeHist(eye)
     gray_roi = cv2.GaussianBlur(gray_roi, (7 ,7), 0)
     # gray_roi = cv2.equalizeHist(gray_roi)
-    _, threshold = cv2.threshold(gray_roi, 5, 255, cv2.THRESH_BINARY_INV)#若無equalize:40
+    _, threshold = cv2.threshold(gray_roi, 5, 255, cv2.THRESH_BINARY_INV) #若無equalize:40
     kernal = np.ones((3, 3),np.uint8)
     cv2.imshow('before', threshold)
     threshold = cv2.dilate(threshold, kernal)
@@ -78,13 +78,13 @@ while True:
         scaleFactor=1.1, #每次掃過增加的面積倍數
         minNeighbors=5, #至少鄰近有符合特徵的數量
         minSize=(30,30),
-        flags=cv2.CASCADE_SCALE_IMAGE###修正過
+        flags=cv2.CASCADE_SCALE_IMAGE
     )
 
     img = np.zeros((height,width,1), np.uint8)
     # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
-        h = int(0.7*h)#發現他只吃整數
+        h = int(0.7*h)
         img = cv2.rectangle(img, (x-10, y-10), (x+w+10, y+h), 255, -1) #外框(哪張圖,左上角位置,左下角位置,顏色,寬度)
         # img = cv2.rectangle(img, (x, y), (x+w, y+h), 255, -1) #原本的
         # cv2.imshow('rec', img)
@@ -105,7 +105,7 @@ while True:
     for (x, y, w, h) in eyes:
         mask_roi = gray[y:(y+h), x:(x+w)]
         # i += 1
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)#原式
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2) #原式
         # mask_roi = cv2.bitwise_and(gray, gray, mask = img)
         # cv2.imshow('maskroi', mask_roi)
         # roi[i] = frame[x:(x+w), y:(y+h)]
