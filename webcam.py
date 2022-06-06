@@ -20,7 +20,7 @@ def roiDetector(eye, frame):
     contours, _ = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # for cnt in contours: cv2.drawContours(roi, [cnt], -1, (0, 0, 255), 3) #draw contours
     ###-----------------from net
-    contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)###
+    contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
     for cnt in contours:
         (xx, yy, ww, hh) = cv2.boundingRect(cnt)
        #cv2.drawContours(roi, [cnt], -1, (0, 0, 255), 3)
@@ -42,9 +42,9 @@ def roiDetector(eye, frame):
 
 
 
-cascPath = "haarcascade_frontalface_default.xml"#路徑
+cascPath = "haarcascade_frontalface_default.xml" #路徑
 cascPath1 = "haar_eye.xml"
-faceCascade = cv2.CascadeClassifier(cascPath)#用這個分類去找出來有沒有符合
+faceCascade = cv2.CascadeClassifier(cascPath) #用這個分類去找出來有沒有符合
 eyeCascade = cv2.CascadeClassifier(cascPath1)
 
 video_capture = cv2.VideoCapture(1)
@@ -56,7 +56,7 @@ while True:
     ret, frame = video_capture.read()#boolean, frame
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     ###---------optional
-    # gray = cv2.equalizeHist(gray)#好像並沒有效果特別好
+    # gray = cv2.equalizeHist(gray) #效果沒有特別好
     #-------------
     # h, w = gray.shape
     # linstrimg = gray.copy()
@@ -75,8 +75,8 @@ while True:
     #-------------
     faces = faceCascade.detectMultiScale(
         gray,
-        scaleFactor=1.1,#每次掃過增加的面積倍數
-        minNeighbors=5,#至少鄰近有符合特徵的數量
+        scaleFactor=1.1, #每次掃過增加的面積倍數
+        minNeighbors=5, #至少鄰近有符合特徵的數量
         minSize=(30,30),
         flags=cv2.CASCADE_SCALE_IMAGE###修正過
     )
@@ -85,10 +85,10 @@ while True:
     # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
         h = int(0.7*h)#發現他只吃整數
-        img = cv2.rectangle(img, (x-10, y-10), (x+w+10, y+h), 255, -1)#框框(哪張圖,左上角位置,左下角位置,顏色,寬度)
-        # img = cv2.rectangle(img, (x, y), (x+w, y+h), 255, -1)#原本的
+        img = cv2.rectangle(img, (x-10, y-10), (x+w+10, y+h), 255, -1) #外框(哪張圖,左上角位置,左下角位置,顏色,寬度)
+        # img = cv2.rectangle(img, (x, y), (x+w, y+h), 255, -1) #原本的
         # cv2.imshow('rec', img)
-    if faces != (): mask_faces = cv2.bitwise_and(gray, gray, mask = img)#位元運算
+    if faces != (): mask_faces = cv2.bitwise_and(gray, gray, mask = img) #二進位運算
     else: mask_faces = gray
     # cv2.imshow('mask_faces', mask_faces)
     #eyes detect
@@ -120,12 +120,12 @@ while True:
     # cv2.imshow('roi', roi)
     # gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
     # gray_roi = cv2.equalizeHist(gray_roi)
-    # gray_roi = cv2.GaussianBlur(gray_roi, (7 ,7), 0)##網路上學到的
+    # gray_roi = cv2.GaussianBlur(gray_roi, (7 ,7), 0)
     # # gray_roi = cv2.equalizeHist(gray_roi)
-    # _, threshold = cv2.threshold(gray_roi, 3, 255, cv2.THRESH_BINARY_INV)#若無equalize:40
+    # _, threshold = cv2.threshold(gray_roi, 3, 255, cv2.THRESH_BINARY_INV) #若無equalize:40
     # contours, _ = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # ###-----------------from net
-    # contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)###
+    # ###-----------------from internet
+    # contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
     # for cnt in contours:
     #     (x, y, w, h) = cv2.boundingRect(cnt)
     #    #cv2.drawContours(roi, [cnt], -1, (0, 0, 255), 3)
@@ -143,10 +143,4 @@ while True:
 # When everything is done, release the capture
 video_capture.release()
 cv2.destroyAllWindows()
-
-
-#下一步:
-# 先實驗在roi檔案中能否畫線在原始照片上
-# 在roiDetector引入原本照片，讓畫線時直接畫在原照片上(先用img，黑色的那個代替)，還要引入眼睛在原始照片的座標
-
 
