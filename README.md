@@ -28,4 +28,40 @@ $ python3 roiTrace_1.py
 - Numpy: 矩陣運算。https://numpy.org/
 - dlib: 人臉辨識。https://pypi.org/project/dlib/
 - math: 求歐幾里得範數hypot()。https://docs.python.org/3/library/math.html
-- time: 校正時計時。https://www.google.com/search?q=python+time+documentation&rlz=1C1PRFI_enTW786TW786&oq=python+time+docu&aqs=chrome.1.69i57j0i512j0i8i30l3j0i8i10i30j0i8i30.4410j0j7&sourceid=chrome&ie=UTF-8
+- time: 校正時計時。https://docs.python.org/3/library/time.html
+
+English Version:
+# Roi-Tracer
+## Operation Steps:
+1. Run `roiTrace_1.py`
+```bash
+$ python3 roiTrace_1.py
+```
+2. Calibration:
+   a. When the window displays 'Please stare at the up left edge...', focus your eyes on the top-left edge of the screen for a few seconds.
+   b. Using your peripheral vision, when the next line 'Please stare at the down right edge...' appears, switch your focus to the bottom-right edge of the screen for a few seconds.
+3. If done correctly, the gaze will be displayed on the black screen that appears. In the top-left corner of the black screen, you will see an eye image processing sequence from left to right: original image => `equalizeHist` => `GaussianBlur` => `equalizeHist` => `threshold` followed by `dilate`. Here's an example:
+![Example](https://user-images.githubusercontent.com/50452986/172172606-e5ec963d-6b01-47d1-af03-95923a736868.PNG)
+
+5. Enlarge the black screen to full-screen mode to see a white dot moving with your gaze on the black screen.
+![Success, judging gaze based on eye height, further adjustment needed](https://user-images.githubusercontent.com/50452986/172172240-c42314e4-b24f-4966-9e56-100a06e39ff1.PNG)
+**Note: The default screen resolution is approximately 1920x1080. If different, adjustments should be made at lines 90 and 138.**
+
+## Implementation Principle:
+- The direction of the gaze is calculated using the horizontal position of the pupil within the eye and the height of the eye. The pupil’s vertical position is not used to measure the gaze height due to the small eye height in the frame and low resolution. Eye height varies with eye opening size, which affects the accuracy. Eye height itself proves to be a better indicator of gaze height because the eyes appear smaller when looking down and larger when looking up.
+- During initial calibration, 64 samples are taken, and the average of the middle 32 values is used as the reference point.
+- While running, the gaze position is averaged over eight frames (acting as a low-pass filter) to solve the issue of gaze jumping.
+
+### Processed Pupil Images:
+![Adjusted original image parameters using pre-existing code successfully](https://user-images.githubusercontent.com/50452986/172172037-728b4ccb-e03f-49f1-af82-b462361d472d.PNG)
+![Adjusted original image parameters using pre-existing code successfully 1](https://user-images.githubusercontent.com/50452986/172172073-f5ad87ec-5e3b-4560-830d-f11eb34074ef.PNG)
+![Adjusted original image parameters using pre-existing code successfully 2](https://user-images.githubusercontent.com/50452986/172172104-e3a94249-9478-4239-a28d-a482e730aa64.PNG)
+![Equalized video is also binarized](https://user-images.githubusercontent.com/50452986/172172341-77849dc4-b782-4652-990f-b4a197a7a15b.PNG)
+
+### Used Modules:
+- **OpenCV**: For image processing. https://pypi.org/project/opencv-python/
+- **Numpy**: For matrix operations. https://numpy.org/
+- **dlib**: For facial recognition. https://pypi.org/project/dlib/
+- **math**: For Euclidean norm calculation using `hypot()`. https://docs.python.org/3/library/math.html
+- **time**: For timing during calibration. https://docs.python.org/3/library/time.html
+
